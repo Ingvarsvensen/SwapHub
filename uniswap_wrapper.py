@@ -1,36 +1,59 @@
-import eth
 from web3 import Web3
 from uniswap import Uniswap
 from dotenv import load_dotenv
-import database
 import os
+import requests
 
-from etherscan import Etherscan
-
-#eth_balance = eth.get_eth_balance("0x39eB410144784010b84B076087B073889411F878")
-#print(eth_balance)
 
 load_dotenv()
+private_key = os.getenv("PRIVATE_KEY")
+address = os.getenv("ADDRESS")
+provider = os.getenv("PROVIDER")
+network = os.getenv("NETWORK", "testnet")  # mainnet по умолчанию, может быть изменено на testnet
 
-private_key = os.environ["PRIVATE_KEY"]
-address = os.environ["ADDRESS"]
-provider = os.environ["PROVIDER"]
-eth = Etherscan("ETH_API_KEY")
-#provider = Web3.HTTPProvider("PROVIDER")
+# GraphQL requests function
+def execute_graphql_query(query):
+    url = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"  # actual endpoint for mainnet
+    response = requests.post(url, json={'query': query})
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to execute GraphQL query. Status code: {response.status_code}")
 
-token_address = Web3.to_checksum_address("0x6b175474e89094c44da98b954eedeac495271d0f")  # DAI
+# Fetching top liquid pools
+def get_most_liquid_pools():
+    query = """
+    {
+      pools(first: 1000, orderBy: liquidity, orderDirection: desc) {
+        id
+      }
+    }
+    """
+    result = execute_graphql_query(query)
+    return result['data']['pools']
 
-#address = Web3.to_checksum_address("0x434e0E580d37B912D6BB87C0942A683E51a7fD36")
-uniswap_wrapper = Uniswap(address=address, private_key=private_key, provider=provider)
 
-eth_amount = 1 * 10**18  # 1 ETH в wei
-price = uniswap_wrapper.get_price_input("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", token_address, eth_amount)
+if network == "mainnet":
+    pass
+elif network == "testnet":
+    pass
+else:
+    raise ValueError("Invalid network specified")
 
+# Initialize Uniswap
+uniswap_wrapper = Uniswap(address=address, private_key=private_key, provider=provider, version=3)
 
-database.create_table()
-database.insert_rate("Uniswap", "ETH/DAI", price)
-rates = database.fetch_rates()
+# Getting price of ETH in DAI
+eth_address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"  # ETH
+dai_address = "0x6B175474E89094C44Da98b954EedeAC495271d0F"  # DAI
 
-print(price)
-print(rates)
+eth_amount = 0.001 * 10**18
+try:
+    price = uniswap_wrapper.get_price_input(eth_address, dai_address, eth_amount)
+    print(f"The price of {eth_amount} ETH in DAI is: {price}")
 
+    most_liquid_pools = get_most_liquid_pools()
+    print(f"Most liquid pools: {most_liquid_pools}")
+
+except Exception as e:
+    print(f"An error occurred: {e}")
