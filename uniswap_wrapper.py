@@ -21,3 +21,4 @@ database.insert_rate("Uniswap", f"{first_pool['token0']['symbol']}/{first_pool['
 # Check if the data was successfully inserted
 rates = database.fetch_rates()
 print(f"Current rates in database: {rates}")
+

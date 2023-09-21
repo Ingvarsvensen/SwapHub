@@ -27,6 +27,13 @@ def create_table():
     cur.close()
     conn.close()
 
+def alter_rate_column():
+    conn = init_db()
+    cur = conn.cursor()
+    cur.execute("ALTER TABLE currency_rates ALTER COLUMN rate TYPE NUMERIC;")
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def insert_rate(dex_name, pair, rate):
     conn = init_db()
@@ -45,3 +52,4 @@ def fetch_rates():
     cur.close()
     conn.close()
     return rates
+
