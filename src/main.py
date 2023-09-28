@@ -1,5 +1,5 @@
-import database
-from generic_wrapper import fetch_top_pools
+from src.utils import database
+from src.utils.generic_wrapper import fetch_top_pools
 
 
 def main():
