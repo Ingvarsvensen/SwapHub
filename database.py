@@ -1,5 +1,6 @@
 import psycopg2
 
+
 def init_db():
     conn = psycopg2.connect(
         host="localhost",
@@ -12,44 +13,37 @@ def init_db():
 
 
 def create_table():
-    conn = init_db()
-    cur = conn.cursor()
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS currency_rates (
+    query = '''
+    CREATE TABLE IF NOT EXISTS token_prices (
         id SERIAL PRIMARY KEY,
-        dex_name TEXT NOT NULL,
-        pair TEXT NOT NULL,
-        rate NUMERIC(10, 4) NOT NULL,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def alter_rate_column():
+        exchange_name TEXT,
+        token_symbol TEXT,
+        price NUMERIC
+    );
+    '''
     conn = init_db()
     cur = conn.cursor()
-    cur.execute("ALTER TABLE currency_rates ALTER COLUMN rate TYPE NUMERIC;")
+    cur.execute(query)
     conn.commit()
     cur.close()
     conn.close()
 
-def insert_rate(dex_name, pair, rate):
+
+def insert_prices(exchange_name, token_data):
     conn = init_db()
     cur = conn.cursor()
-    cur.execute("INSERT INTO currency_rates (dex_name, pair, rate) VALUES (%s, %s, %s)", (dex_name, pair, rate))
+    for token, price in token_data.items():
+        cur.execute("INSERT INTO token_prices (exchange_name, token_symbol, price) VALUES (%s, %s, %s)",
+                    (exchange_name, token, price))
     conn.commit()
     cur.close()
     conn.close()
-
 
 def fetch_rates():
     conn = init_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM currency_rates")
-    rates = cur.fetchall()
+    cur.execute("SELECT * FROM token_prices")
+    rows = cur.fetchall()
     cur.close()
     conn.close()
-    return rates
-
+    return rows
