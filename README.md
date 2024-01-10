@@ -21,7 +21,7 @@
 ### Step 1: Clone the Repository 📂
 
 ```
-git clone https://github.com/your-username/SwapHub.git
+git clone https://github.com/Ingvarsvensen/SwapHub.git
 ```
 
 ### Step 2: Set up Docker 🐳
